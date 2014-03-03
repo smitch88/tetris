@@ -460,7 +460,7 @@
 				
 				getRandomShape: function(){
 
-				 	// Find a random shape according to probability array
+				 	// Find a random number according to probability
 					var numShapes = this.shapeTypesArray.length,
 						rand = Math.random() * numShapes,
 						chosenPosition = 0;
@@ -507,6 +507,7 @@
 				this.options = $.extend( {}, defaults, options );
 				this._defaults = defaults;
 				this._name = pluginName;
+				this.SHOWDEBUG = false;
 				
 				// Object containers			
 				this.$tetrisWrapper = $( '#tetris-wrapper' );
@@ -534,7 +535,7 @@
 				this.isPaused = false;
 				this.fallTimeout = null;
 				this.initSpeed = 1000;
-				this.maxSpeed = 50;
+				this.maxSpeed = 100;
 				this.speed = this.initSpeed;
 				this.highscore = 0;
 				this.lines = 0;
@@ -543,7 +544,7 @@
 				this.linesPerLevelIncrease = 10;
 				this.lineLevelCounter = 0;
 				this.maxLevel = 10;
-				this.speedIncreaseFactorEveryLevel = 10; // speed divided by 10 basically
+				this.speedIncreaseFactorEveryLevel = 100; // speed divided by 10 basically
 				
 				// Shape
 				this.currShape = null;
@@ -688,14 +689,14 @@
 				
 				_viewActionDebug: function(){
 					
-					console.log( this.actionQueue );					
+					if( this.SHOWDEBUG ) console.log( this.actionQueue );					
 					
 				},
 								
 				/* Generate Tetris canvas layout */
 				_drawBoard: function(){
 					
-					console.log( "Generate the canvas" );
+					if( this.SHOWDEBUG ) console.log( "Generate the canvas" );
 					
 					var $container = $( "<div class='tetris-game-container'><canvas id='tetris-canvas' height='650' width='500'></canvas></div>" )
 					
@@ -724,7 +725,7 @@
 				
 				_play: function(){
 					
-					console.log( "Play the game" );
+					if( this.SHOWDEBUG ) console.log( "Play the game" );
 					
 					this.isPlaying = true;					
 					this.$infoText.html( "" );
@@ -753,7 +754,7 @@
 				
 				_reset: function(){
 					
-					console.log( "Resetting the game" );
+					if( this.SHOWDEBUG ) console.log( "Resetting the game" );
 					
 					if( this.isPaused ){
 						
@@ -811,7 +812,7 @@
 				 	this.nextShapeRotation = Math.floor( Math.random() * this.shapes[ this.nextShape ].length );				
 				 	this._displayPreviewShape();
 				 	
-				 	console.log( "created next shape:" + this.shapesObject.shapeTypes[ this.nextShape ] + "with rotation " +  this.nextShapeRotation );
+				 	if( this.SHOWDEBUG ) console.log( "created next shape:" + this.shapesObject.shapeTypes[ this.nextShape ] + "with rotation " +  this.nextShapeRotation );
 				 	
 				},
 				
@@ -857,7 +858,7 @@
 				
 				_doShapeFall: function(){
 					
-					console.log( "process shape fall" );
+					if( this.SHOWDEBUG ) console.log( "process shape fall" );
 					
 					var self = this;
 					
@@ -885,7 +886,7 @@
 				
 				_lockShapeInPosition: function(){
 					
-					console.log( "locking shape into position as it has come into collision with something" );
+					if( this.SHOWDEBUG ) console.log( "locking shape into position as it has come into collision with something" );
 					
 					var self = this;
 					
@@ -926,10 +927,10 @@
 								this.level++;
 								this.lineLevelCounter = 0;
 								
-								if( this.speed < this.maxSpeed ){
+								if( this.speed > this.maxSpeed ){
 									
-									this.speed /= this.speedIncreaseFactorEveryLevel;
-									
+									this.speed -= this.speedIncreaseFactorEveryLevel;
+
 								}
 								
 							}
@@ -1129,12 +1130,10 @@
 							 					
 							 				}
 							 			}
-							 		}
-							 		
+							 		}							 		
 					 			}
 					 		}
-					 	}
-							 
+					 	}							
 					}
 					
 					return valid
@@ -1162,7 +1161,7 @@
 
 				 	var shapeMatrix = this.shapes[ this.currShape ][ this.currShapeRotation ];
 				 	
-				 	console.log( "updating board with current shape " + this.currShape + " with rotation " + this.currShapeRotation );
+				 	if( this.SHOWDEBUG ) console.log( "updating board with current shape " + this.currShape + " with rotation " + this.currShapeRotation );
 
 					// Draw the new position of the shape accounting for the rotation
  				 	for ( var shapeRow = 0; shapeRow < shapeMatrix.length; shapeRow++ ) {
@@ -1269,7 +1268,7 @@
 				
 				_displayPreviewShape: function(){
 					
-					console.log( "Displaying the next shape:" + this.shapesObject.shapeTypes[ this.nextShape ] + " with rotation " + this.nextShapeRotation );
+					if( this.SHOWDEBUG ) console.log( "Displaying the next shape:" + this.shapesObject.shapeTypes[ this.nextShape ] + " with rotation " + this.nextShapeRotation );
 
 					var canvas = this.$nextShapePreviewCanvas[0],
 						canvasContext = canvas.getContext( '2d' ),
@@ -1365,7 +1364,7 @@
 				// TETRIS ACTIONS
 				_moveLeft: function(){
 					
-					console.log( "move left" );
+					if( this.SHOWDEBUG ) console.log( "move left" );
 					
 					if ( this._testPosition( this.currShape, this.currShapeRotation, this.shapeX - 1, this.shapeY ) ) {
 						
@@ -1378,7 +1377,7 @@
 
 				_moveRight: function(){
 					
-					console.log( "move right" );
+					if( this.SHOWDEBUG ) console.log( "move right" );
 					
 					if ( this._testPosition( this.currShape, this.currShapeRotation, this.shapeX + 1, this.shapeY ) ) {
 						
@@ -1391,7 +1390,7 @@
 
 				_moveDown: function(){
 					
-					console.log( "move down" );
+					if( this.SHOWDEBUG ) console.log( "move down" );
 					
 					if ( this._testPosition( this.currShape, this.currShapeRotation, this.shapeX, this.shapeY + 1 ) ) {
 						
@@ -1404,7 +1403,7 @@
 
 				_drop: function(){
 					
-					console.log( "drop" );
+					if( this.SHOWDEBUG ) console.log( "drop" );
 					
 					var dropDistance = 0,
 						self = this;
@@ -1466,7 +1465,7 @@
 				
 				_rotate: function(){
 					
-					console.log( "rotate" );
+					if( this.SHOWDEBUG ) console.log( "rotate" );
 					
 					// Get the next rotation position array
 					var nextRotation = this.currShapeRotation++ < this.shapes[ this.currShape ].length - 1 ? this.currShapeRotation : 0,
