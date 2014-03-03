@@ -1,0 +1,1541 @@
+<!doctype html>
+
+<html>
+
+<head>
+	
+	<title>Tetris!</title>
+	
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+	<link href='http://fonts.googleapis.com/css?family=Audiowide' rel='stylesheet' type='text/css'>
+	<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+		
+	<style>
+		
+		body {
+			font-family: 'Audiowide', cursive;
+		}
+		
+		#tetris-wrapper{
+			height: 661px;
+			width: 520px;
+			border: 10px solid #999;		
+		}
+		
+		#tetris {			
+			height: 100%;
+			width: 100%;			
+		}
+		
+		#game-wrapper{
+			float: right;
+		}
+		
+		.tetris-game-container {
+			background-color: #555;
+			height: 100%;					
+		}
+				
+		.collapse-box-model {
+			margin: 0;
+			padding: 0;
+		}
+		
+		.button-group button{
+			display: block;
+		}
+		.button-group button + button {
+			margin-top: 10px;
+		}
+		
+		.cushion-top{
+			margin-top: 10px;
+		}
+
+		.cushion-right{
+			margin-right: 10px;
+		}
+				
+		.page-header {
+			margin-top: 5px;
+			margin-bottom: 5px;
+		}
+		
+		.shape-container canvas.preview {
+			border: 2px dashed #DDD;
+			height: 200px;
+			width: 200px;
+		}
+		
+		#overlay h1.overlay-text, #flash h1.flash-text {
+			position: relative;
+			top: 40%;
+			left: 3%;
+			color: #111;
+		}
+		
+		#overlay {
+			background-color: white;
+		    bottom: 0;
+		    height: 100%;
+		    left: 0;
+		    opacity: 0.5;
+		    position: absolute;
+		    right: 0;
+		    top: 0;
+		    width: 100%;
+		}
+
+		#flash h1.flash-text {
+			font-size: 40px;
+			font-weight: bold;
+			color: white !important;
+		}
+		
+		#flash {
+		    bottom: 0;
+		    height: 100%;
+		    left: 0;
+		    position: absolute;
+		    right: 0;
+		    top: 0;
+		    width: 100%;
+		}
+				
+	</style>
+	
+</head>
+
+<body>
+	
+	<div class="container">
+		
+		<div class="page-header">
+		
+			<h1 class="collapse-box-model">Tetris</h1>
+			
+		</div>
+			
+		<div class="row">
+			
+			<div class="col-xs-6">
+							
+				<div id="game-wrapper">
+					
+					<p id="info-text" class="pull-left">Press Enter To Start!</p>
+					
+					<div id="high-score-container" class="text-right">
+					
+						<label for="high-score">High Score: </label>						
+						
+						<span id="high-score"> 0</span>
+						
+					</div>
+					
+					<div id="tetris-wrapper" class="text-center">
+						
+						<div id="tetris"></div>
+						
+						<div id="overlay" class="hide">
+							
+							<h1 class="overlay-text">Paused</h1>
+							
+						</div>
+
+						<div id="flash" class="hide">
+							
+							<h1 class="flash-text"></h1>
+							
+						</div>
+												
+					</div>
+				
+				</div>
+				
+			</div>
+			
+			<div id="game-options-wrapper" class="col-xs-6 text-left">
+				
+				<div class="row shape-container">
+					
+					<div class="col-xs-5">
+					
+						<h2 class="collapse-box-model"><small>Next Shape</small></h2>									
+						<canvas class="preview cushion-top"></canvas>
+						
+					</div>
+					
+					<div class="col-xs-7">
+					
+						<legend class="cushion-top">Keyboard Controls</legend>
+				
+						<div class="col-xs-4">
+						
+							<ul class="fa-ul" style="list-style: none;">
+								<li><i class="fa-li fa fa-long-arrow-left cushion-right"></i> Left</li>
+								<li><i class="fa-li fa fa-long-arrow-right cushion-right"></i> Right</li>
+								<li><i class="fa-li fa fa-long-arrow-down cushion-right"></i> Down</li>
+								<li><i class="fa-li fa fa-long-arrow-up cushion-right"></i> Rotate</li>				
+							</ul>
+							
+						</div>
+						
+						<div class="col-xs-8">
+		
+							<ul style="list-style: none;">
+								<li>SPACE - Rotate</li>
+								<li>P - Pause</li>
+								<li>ESC. - Quit Game</li>
+								<li>ENTER - New / Drop</li>				
+							</ul>
+											
+						</div>
+						
+					</div>
+					
+				</div>
+								
+				<h2 class="collapse-box-model"><small>Game Options</small></h2>
+				
+				<div class="button-group cushion-top">
+					
+					<button id="new-game" class="btn btn-default out-game-only">New Game</button>
+					
+					<button id="pause-game" class="btn btn-default in-game-only">Pause Game</button>
+					
+					<button id="quit-game" class="btn btn-danger in-game-only">Quit</button>
+					
+				</div>
+				
+				<hr>
+				
+				<div class=" game-info-container">
+					
+					<h3>Score: <span id="score-indicator">0</span></h3>
+									
+					<h3>Lines: <span id="lines-indicator">0</span></h3>
+					
+					<h3>Level: <span id="level-indicator">1</span></h3>
+					
+					<h3 class="sr-only">Time: <span id="time-indicator">00:00</span></h3>
+					
+				</div>
+																
+			</div>
+			
+		</div>
+		
+	</div>
+	
+	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	
+	<script>
+
+		;( function( $, window, document, undefined ) {
+			'use strict';
+		
+			// Create the defaults
+			var pluginName = 'tetris',
+				defaults = {
+				
+				};
+		    
+			function Shapes(){
+				
+				this.probabilityDistribution = [1,1,1,1,1,1,1];
+
+				this.shapeTypesArray = [ "ln", "sq", "j", "l", "s", "z", "t"];
+
+				this.shapeTypes = {
+						
+			 		"ln" : "line",
+			 		"sq" : "square",
+			 		"j" : "J",
+			 		"l" : "L",
+			 		"s" : "S",
+			 		"z" : "Z",
+			 		"t" : "T"
+			 		
+				};
+				
+				this.colors = {
+						
+			 		"ln" : '#5bc0de',
+			 		"sq" : '#debb27',
+			 		"j" : '#f0ad4e',
+			 		"l" : '#428bca',
+			 		"s" : '#5cb85c',
+			 		"z" : '#d9534f',
+			 		"t" : '#9B479F'
+			 		
+				};
+				
+				this.shapes = {
+						
+					"ln":
+						[
+							[
+								[0,0,0,0],
+								[0,0,0,0],
+								[1,1,1,1],
+								[0,0,0,0]
+							],
+							[
+								[0,1,0,0],
+								[0,1,0,0],
+								[0,1,0,0],
+								[0,1,0,0]
+							],
+							[
+								[0,0,0,0],
+								[1,1,1,1],
+								[0,0,0,0],
+								[0,0,0,0]
+							],
+							[
+								[0,0,1,0],
+								[0,0,1,0],
+								[0,0,1,0],
+								[0,0,1,0]
+							]
+						],
+					
+					"sq":
+						[
+							[
+								[1,1],
+								[1,1]
+							] 						
+						],			
+
+					"j":
+						[
+				 			[
+								[0,0,0],
+								[1,1,1],
+								[0,0,1]
+							],
+							[
+								[0,1,0],
+								[0,1,0],
+								[1,1,0]
+							],
+							[
+								[1,0,0],
+								[1,1,1],
+								[0,0,0]
+							],
+							[
+								[0,1,1],
+								[0,1,0],
+								[0,1,0]
+							] 						
+						],
+							
+					"l":
+						[
+					 		[
+								[0,0,0],
+								[1,1,1],
+								[1,0,0]
+							],
+							[
+								[1,1,0],
+								[0,1,0],
+								[0,1,0]
+							],
+							[
+								[0,0,1],
+								[1,1,1],
+								[0,0,0]
+							],
+							[
+								[0,1,0],
+								[0,1,0],
+								[0,1,1]
+							]  						
+						],
+
+					"s":
+						[
+					 		[
+								[0,0,0],
+								[0,1,1],
+								[1,1,0]
+							],
+							[
+								[1,0,0],
+								[1,1,0],
+								[0,1,0]
+							],
+							[
+								[0,1,1],
+								[1,1,0],
+								[0,0,0]
+							],
+							[
+								[0,1,0],
+								[0,1,1],
+								[0,0,1]
+							] 					
+						],
+
+					"z":
+						[
+					 		[
+								[0,0,0],
+								[1,1,0],
+								[0,1,1]
+							],
+							[
+								[0,1,0],
+								[1,1,0],
+								[1,0,0]
+							],
+							[
+								[1,1,0],
+								[0,1,1],
+								[0,0,0]
+							],
+							[
+								[0,0,1],
+								[0,1,1],
+								[0,1,0]
+							] 					
+						],
+
+					"t":
+					 	[
+							[
+								[0,0,0],
+								[1,1,1],
+								[0,1,0]
+							],
+							[
+								[0,1,0],
+								[1,1,0],
+								[0,1,0]
+							],
+							[
+								[0,1,0],
+								[1,1,1],
+								[0,0,0]
+							],
+							[
+								[0,1,0],
+								[0,1,1],
+								[0,1,0]
+							]
+						]						
+				}
+				
+			}
+
+			Shapes.prototype = {
+				
+				draw: function( context, color, x, y, w, h ){
+					
+					context.fillStyle = color;
+					context.fillRect( x, y, w, h );			
+
+					context.strokeStyle = '#FFFFFF';
+					context.strokeRect( x, y, w, h );
+				},
+
+				erase: function( context, x, y, w, h ){
+								
+					context.clearRect( x - 1, y - 1, w + 3, h + 3 );
+
+				},
+				
+				getShapes: function(){					
+					var shapesObject = $.extend( true, {}, this.shapes )					
+					return shapesObject
+				},
+	
+				getShapeColors: function(){					
+					var colorsObject = $.extend( true, {}, this.colors )					
+					return colorsObject
+				},
+				
+				getRandomShape: function(){
+
+				 	// Find a random number according to probability
+					var numShapes = this.shapeTypesArray.length,
+						rand = Math.random() * numShapes,
+						chosenPosition = 0;
+				 	
+					rand -= this.probabilityDistribution[ chosenPosition ];
+					
+					while( rand > 0 ) {
+						
+						chosenPosition++;
+						
+						if ( chosenPosition > numShapes - 1 ) {
+							break;
+						};
+					
+						rand -= this.probabilityDistribution[ chosenPosition ];
+						
+					}
+					
+					// Update the distribution array so the random selection is random every random selection
+					var distributionValue = this.probabilityDistribution[ chosenPosition ] * .5;
+					
+					this.probabilityDistribution[ chosenPosition ] *= .5;
+					
+					for ( var distIndex = 0; distIndex < numShapes; distIndex++ ) {
+						
+						if ( distIndex != chosenPosition ) {
+							
+							this.probabilityDistribution[ distIndex ] += distributionValue / ( numShapes - 1);
+							
+						}
+						
+					}
+					
+					return this.shapeTypesArray[ chosenPosition ]; 
+									
+				}
+			
+			}
+			
+			function Tetris( element, options ) {
+				
+				this.element = element;
+				this.$el = $( element );
+				this.options = $.extend( {}, defaults, options );
+				this._defaults = defaults;
+				this._name = pluginName;
+				
+				// Object containers			
+				this.$tetrisWrapper = $( '#tetris-wrapper' );
+				this.$overlay = $( '#overlay' );
+				this.$overlayText = $( '#overlay .overlay-text' );
+				this.$flash = $( '#flash' );
+				this.$flashText = $( '#flash .flash-text' );				
+				this.$inGameButtons = $( 'button.in-game-only' );
+				this.$outGameButtons = $( 'button.out-game-only' );
+				this.$infoText = $( '#info-text' );
+				this.$levelIndicator = $( '#level-indicator' );
+				this.$linesIndicator = $( '#lines-indicator' );
+				this.$timeIndicator = $( '#time-indicator' );
+				this.$scoreIndicator = $( '#score-indicator' );
+				this.$highScoreIndicator = $( '#high-score' );
+				this.$nextShapePreviewCanvas = $( 'canvas.preview' );
+				this.$mainCanvas = null;
+				
+				// Tetris General
+				this.board = [];
+				this.filled = [];
+				this.rows = 20;
+				this.columns = 10;
+				this.isPlaying = false;
+				this.isPaused = false;
+				this.fallTimeout = null;
+				this.initSpeed = 1000;
+				this.maxSpeed = 50;
+				this.speed = this.initSpeed;
+				this.highscore = 0;
+				this.lines = 0;
+				this.level = 1;
+				this.score = 0;
+				this.linesPerLevelIncrease = 10;
+				this.lineLevelCounter = 0;
+				this.maxLevel = 10;
+				this.speedIncreaseFactorEveryLevel = 10; // speed divided by 10 basically
+				
+				// Shape
+				this.currShape = null;
+				this.currShapeRotation = null;
+				this.nextShape = null;
+				this.nextShapeRotation = null;
+				this.lastTranslation = null;
+				this.shapeX = 0;
+				this.shapeY = 0;
+				this.shapesObject = new Shapes();				
+				this.shapes = this.shapesObject.getShapes();
+				this.colors = this.shapesObject.getShapeColors();
+				this.shapeProbabilityDistribution = this.shapesObject.probabilityDistribution;
+								
+				// Actions
+				this.KEY = { ENTER: 13, ESC: 27, SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, P: 80 };
+		       	this.DIR = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3, ROTATE: 0, DROP: -1 };
+				this.actionQueue = [];											
+				
+				this.init();
+				
+			}
+		
+			Tetris.prototype = {
+			
+				init: function() {
+					
+					this._toggleGameButtons();					
+					this._drawBoard();					
+					this._addEvents();
+					this._setHighScoreFromLocalStorage();
+					
+					return
+					
+				},
+				
+				_setHighScoreFromLocalStorage: function(){
+					
+					var localStorageHighScore = localStorage.getItem( 'tetris_highscore' );
+					
+					if ( localStorageHighScore != null ) {
+						
+						this.highscore = localStorageHighScore;
+						
+					} 
+					
+					this.$highScoreIndicator.text( this.highscore );
+					
+				},
+				
+				/* Event handlers */
+				_addEvents: function(){
+					
+					var self = this;
+					
+					$( '#new-game' ).on( "click.tetris", function( e ){
+						
+						self._reset();						
+						self._play();				
+						this.blur(); // So the user isnt stuck on the button
+						
+					});
+
+					$( '#pause-game' ).on( "click.tetris", function( e ){
+						
+						if( !self._getIsPlaying ) return
+						
+						self._pause();	
+						
+					});
+
+					$( '#quit-game' ).on( "click.tetris", function( e ){
+						
+						if( !self._getIsPlaying ) return
+						
+						self._end();	
+						
+					});
+					
+					$( document ).on( "keydown", function( e ){
+
+				      	if ( self.isPlaying ) {
+					    	
+				      		switch( e.keyCode ) {
+					          
+				      			case self.KEY.LEFT:				      				
+				      				self.actionQueue.push( self.DIR.LEFT );
+				      				self._moveLeft();
+				      				break;
+				      			
+					          	case self.KEY.RIGHT:
+					          		self.actionQueue.push( self.DIR.RIGHT );
+					          		self._moveRight();
+					          		break;
+					          		
+					          	case self.KEY.UP:
+					          		self.actionQueue.push( self.DIR.UP );
+					          		self._rotate();
+					          		break;
+					          		
+					          	case self.KEY.SPACE:
+					          		self.actionQueue.push( self.DIR.ROTATE );
+					          		self._rotate();
+					          		break;
+					          		
+					          	case self.KEY.DOWN:
+					          		self.actionQueue.push( self.DIR.DOWN );
+					          		self._moveDown();
+					          		break;
+					          		
+					          	case self.KEY.ESC:
+					          		self._end(); 
+					          		break;
+					          		
+				          		case self.KEY.P:
+				          			self._pause(); 
+				          		break;
+
+				          		case self.KEY.ENTER:
+				          			self.actionQueue.push( self.DIR.DROP );
+				          			self._drop();
+								break;
+								
+				        	}
+				      		
+				      	} else {
+							
+				      		switch( e.keyCode ) {
+				      						          		
+				          		case self.KEY.ENTER:
+					      			self._reset();
+					      			self._play();
+								break;
+								
+				      		}
+				      		
+					    }
+			            
+			    	});
+					
+				},
+				
+				_viewActionDebug: function(){
+					
+					console.log( this.actionQueue );					
+					
+				},
+								
+				/* Generate Tetris canvas layout */
+				_drawBoard: function(){
+					
+					console.log( "Generate the canvas" );
+					
+					var $container = $( "<div class='tetris-game-container'><canvas id='tetris-canvas' height='650' width='500'></canvas></div>" )
+					
+					this.$el.append( $container );					
+					
+					// Set the main canvas from null
+					this.$mainCanvas = $( 'canvas#tetris-canvas' );
+					
+					return
+					
+				},
+				
+				_getIsPlaying: function(){
+					return this.isPlaying	
+				},
+
+				_setIsPlaying: function( isPlaying ){
+					this.isPlaying = isPlaying;
+				},
+				
+				_toggleGameButtons: function(){					
+					this.isPlaying ? 
+						( this.$inGameButtons.prop( "disabled", false ), this.$outGameButtons.prop( "disabled", true ) ) : 
+						( this.$inGameButtons.prop( "disabled", true ), this.$outGameButtons.prop( "disabled", false ) );					
+				},
+				
+				_play: function(){
+					
+					console.log( "Play the game" );
+					
+					this.isPlaying = true;					
+					this.$infoText.html( "" );
+					this._toggleGameButtons();
+					
+					// Render inital shape to start game
+					this._createShape();
+					
+				},
+
+				_pause: function(){
+					
+					this.$overlay.toggleClass( 'hide' );					
+					this.$overlay.hasClass( 'hide') ? ( this.$overlayText.html( "" ), this._doShapeFall() ) : ( this.$overlayText.html( "Paused" ), clearTimeout( this.fallTimeout ) );					
+					this.isPaused = !this.isPaused;
+					
+				},
+
+				_unpause: function(){
+					
+					$( '#overlay' ).addClass( 'hide' );					
+					this.isPaused = false;
+					this._doShapeFall();
+					
+				},
+				
+				_reset: function(){
+					
+					console.log( "Resetting the game" );
+					
+					if( this.isPaused ){
+						
+						this._unpause();
+						
+					}
+					
+					if( !this.$overlay.hasClass( "hide" ) ){
+						
+						this.$overlay.addClass( "hide" );
+						
+					}
+					
+					this.$linesIndicator.text( 0 );
+					this.$levelIndicator.text( 1 );
+					this.$scoreIndicator.text( 0 );
+					this._blankBoard();
+					this._setHighScoreFromLocalStorage();
+					
+				},
+				
+				_blankBoard: function(){
+					
+					// Reset the board map
+				 	for ( var boardRows = 0; boardRows < this.rows; boardRows++ ) {
+				 			
+				 		this.board[ boardRows ] = [];
+				 		
+				 		for ( var boardCols = 0; boardCols < this.columns; boardCols++ ) {
+				 			
+						 	this.board[ boardRows ][ boardCols ] = {
+						 		filled: false,					 		
+						 		fixed: false, // lock determiner
+						 		color: null,
+						 		updated: false
+						 	}
+						 	
+					 	}
+					 	
+				 	} 					
+					
+					// Reset the main canvas				 	
+					var canvas = this.$mainCanvas[0],
+						canvasContext = canvas.getContext( '2d' ),
+						width = canvas.width,
+						height = canvas.height;
+					
+					canvasContext.clearRect( 0, 0, width, height );
+					
+				},
+
+				_createNextShape: function(){					
+				 	
+				 	this.nextShape = this.shapesObject.getRandomShape();
+				 	this.nextShapeRotation = Math.floor( Math.random() * this.shapes[ this.nextShape ].length );				
+				 	this._displayPreviewShape();
+				 	
+				 	console.log( "created next shape:" + this.shapesObject.shapeTypes[ this.nextShape ] + "with rotation " +  this.nextShapeRotation );
+				 	
+				},
+				
+				_createShape: function(){
+					
+					// Game was just initialized
+				 	if( this.currShape == null || this.currShapeRotation == null ){
+				 		
+				 		this._createNextShape();
+					 	
+				 	}
+
+				 	this.currShape = this.nextShape;
+				 	this.currShapeRotation = this.nextShapeRotation;
+				 	
+				 	// Create next shape in queue
+				 	this._createNextShape();
+				 	
+				 	// Starting shape position when it comes into view
+				 	this.shapeX = 3;
+				 	this.shapeY = 0;
+				 					 	
+				 	// Test block position to see if it collides (wall or a filled spot) if not let it just continue to drop on down				 	
+				 	while( !this._testPosition( this.currShape, this.currShapeRotation, this.shapeX, this.shapeY ) ){
+				 		
+				 		this._decreaseShapeYPosition();
+				 		
+				 	}
+				 	
+				 	// Update the board configuration emptying, filling, updating board array objects
+				 	this._updateBoard();
+				 	
+				 	var self = this;
+				 	
+				 	// Let shape continue to fall
+				 	this.fallTimeout = setTimeout( function(){
+				 		
+				 		self._doShapeFall();
+				 		
+				 	}, this.speed ); 
+				 	
+				},
+				
+				_doShapeFall: function(){
+					
+					console.log( "process shape fall" );
+					
+					var self = this;
+					
+					// Check that the position it will move to wont cause a collision
+					if( this._testPosition( this.currShape, this.currShapeRotation, this.shapeX, this.shapeY + 1 ) ){
+						
+						this.shapeY++;
+						
+						this._updateBoard();
+
+					 	this.fallTimeout = setTimeout( function(){
+					 		
+					 		self._doShapeFall();
+					 		
+					 	}, this.speed ); 
+					 	
+					} else {
+						
+						// Collision occurred go ahead and lock the shape position
+						this._lockShapeInPosition();
+						
+					}
+					
+				},
+				
+				_lockShapeInPosition: function(){
+					
+					console.log( "locking shape into position as it has come into collision with something" );
+					
+					var self = this;
+					
+					clearTimeout( this.fallTimeout );
+					
+					// Set the block as FIXED so it can stay within the canvas draw
+				 	for ( var boardRows = 0; boardRows < this.rows; boardRows++ ) {
+			 			
+				 		for ( var boardCols = 0; boardCols < this.columns; boardCols++ ) {
+				 			
+				 			if( this.board[ boardRows ][ boardCols ].filled ){
+				 				
+						 		this.board[ boardRows ][ boardCols ].fixed = true;
+				 			
+				 			}
+				 			
+					 	}
+					 	
+				 	}
+				 	
+					// Test to see if a FULL line was created after its locked in					
+					var createdLineStruct = this._createdLines(),
+						createdLines = createdLineStruct[ "complete" ],
+						holes = createdLineStruct[ "holes" ],
+						hasLines = createdLines.length > 0;
+											
+					if( hasLines ){
+						
+						// Adjust line count
+						this.lines += createdLines.length;						
+						this.lineLevelCounter += createdLines.length;
+						
+						// Adjust level and speed if needed						
+						if( this.lineLevelCounter > this.linesPerLevelIncrease ){
+							
+							if( this.level < this.maxLevel ){
+								
+								this.level++;
+								this.lineLevelCounter = 0;
+								
+								if( this.speed < this.maxSpeed ){
+									
+									this.speed /= this.speedIncreaseFactorEveryLevel;
+									
+								}
+								
+							}
+							
+						}
+						
+						// Adjust score
+						this.score += this._getLineToScoreValue( createdLines.length );
+						
+						// Adjust indicators based on new info
+						this.$linesIndicator.text( this.lines );
+						this.$levelIndicator.text( this.level );
+						this.$scoreIndicator.text( this.score );						
+ 						
+					}
+					
+					// Keep the game going if the person is still playing								
+				 	if( this.isPlaying ){
+					 	
+				 		setTimeout( function(){
+
+							// Copy and move lines
+							var copyIndex = self.rows - 1,
+								blankIndex = 0;							
+							
+						 	for ( var boardRows = self.rows - 1; boardRows > 0; boardRows-- ) {
+					 			
+						 		var copy = ( createdLines.indexOf( boardRows ) == -1 );
+					 			
+				 				for ( var boardCols = 0; boardCols < self.columns; boardCols++ ) {
+				 					
+						 			if( copy ){
+						 				
+						 				self.board[ copyIndex ][ boardCols ].filled = self.board[ boardRows ][ boardCols ].filled;
+						 				self.board[ copyIndex ][ boardCols ].fixed = self.board[ boardRows ][ boardCols ].fixed;
+						 				self.board[ copyIndex ][ boardCols ].color = self.board[ boardRows ][ boardCols ].color;						 				
+
+						 			} else {
+						 				
+						 				self.board[ boardRows ][ boardCols ].filled = false;
+						 				self.board[ boardRows ][ boardCols ].fixed = false;
+						 				self.board[ boardRows ][ boardCols ].color = null;
+						 				
+						 			}
+						 			
+						 			self.board[ boardRows ][ boardCols ].updated = true;
+						 			
+				 				}
+					 			
+				 				if( copy ) copyIndex--;
+				 				
+						 	}
+						 	
+				 			self._createShape();
+				 			
+				 		}, 250 );
+						
+				 	}
+				 	
+				},
+				
+				_getLineToScoreValue: function( numLines ){
+					
+					var score = 0;
+					
+					switch( numLines ){
+					
+						case 1:
+							score = 100;
+							break;
+
+						case 2:
+							score = 200;
+							
+							this._flash( "DOUBLE!" );
+							
+							break;
+
+						case 3:
+							score = 400;
+							
+							this._flash( "TRIPLE!" );
+							
+							break;
+
+						case 4:
+							score = 800;
+							
+							this._flash( "TETRIS!" );
+							
+							break;
+							
+					}
+					
+					return score
+					
+				},
+				
+				_flash: function( flashText ){
+					
+					var self = this;
+					
+					this.$flash.removeClass( 'hide' );
+					this.$flashText.html( flashText );
+					
+					setTimeout( function(){
+						
+						self.$flash.addClass( 'hide' );
+						
+					}, 1000 );
+					
+				},
+				
+				_createdLines: function(){
+					
+					var returnStruct = {
+						"complete": [],
+						"holes": []
+					}
+
+					// Start from the bottom up!
+				 	for ( var boardRows = this.rows - 1; boardRows > -1; boardRows-- ) {
+			 			
+				 		var blockCount = 0;
+				 		
+				 		for ( var boardCols = 0; boardCols < this.columns; boardCols++ ) {
+				 			
+				 			if( this.board[ boardRows ][ boardCols ].filled && this.board[ boardRows ][ boardCols ].fixed ){
+				 				
+				 				blockCount++;
+				 			
+				 			} else {
+				 				
+				 				// Just end since the line cant possible be full
+				 				break;
+				 				
+				 			}
+				 			
+					 	}
+					 	
+				 		if( blockCount === this.columns ) {
+				 			
+				 			returnStruct[ "complete" ].push( boardRows );
+				 			
+				 		} else {
+				 			
+				 			returnStruct[ "holes" ].push( boardRows );
+				 			
+				 		}
+				 		
+				 	}
+				 	
+					return returnStruct
+					
+				},
+				
+				_isOutOfBounds: function( x, y ){
+					return x >= this._getMaxColumns() || y >= this._getMaxRows() || x < 0;
+				},
+				
+				_getMaxColumns: function(){
+					return this.columns;
+				},
+
+				_getMaxRows: function(){
+					return this.rows;
+				},
+				
+				_testPosition: function( shape, rotation, x, y ){
+					
+					var valid = true,
+						currentShape = this.shapes[ shape ][ rotation ],
+						currentShapeLength = currentShape.length;
+					
+					for ( var shapeRow = 0; shapeRow < currentShapeLength; shapeRow++ ) {
+						
+				 		if ( valid ) {
+							 
+				 			for ( var shapeCol = 0; shapeCol < currentShape[ 0 ].length; shapeCol++ ) {
+								
+						 		if ( currentShape[ shapeRow ][ shapeCol ] == 1 ) {
+						 			
+							 		if ( this._isOutOfBounds( x + shapeCol, y + shapeRow ) ) {
+							 			
+								 		valid = false;
+						 				break;
+							 	
+							 		} else {
+								 		
+							 			// Area is occupied by a fixed shape
+							 			if ( y + shapeRow >= 0 ) {							 				
+							 				
+							 				if ( this.board[ y + shapeRow ][ x + shapeCol ].fixed ) {	
+							 					
+							 					valid = false;
+							 					break;
+							 					
+							 				}
+							 			}
+							 		}
+							 		
+					 			}
+					 		}
+					 	}
+							 
+					}
+					
+					return valid
+					
+				},
+				
+				_updateBoard: function(){
+					
+					// Erase prior shape position within the tetris board
+				 	for ( var boardRows = 0; boardRows < this.rows; boardRows++ ) {
+			 			
+				 		for ( var boardCols = 0; boardCols < this.columns; boardCols++ ) {
+				 			
+				 			// Check if occupied by a filled and erase it but only if it is not fixed
+				 			if( this.board[ boardRows ][ boardCols ].filled && !this.board[ boardRows ][ boardCols ].fixed ){
+				 				
+							 	this.board[ boardRows ][ boardCols ].filled = false;
+							 	this.board[ boardRows ][ boardCols ].updated = true;
+				 				
+				 			}
+				 									 	
+					 	}
+					 	
+				 	}
+
+				 	var shapeMatrix = this.shapes[ this.currShape ][ this.currShapeRotation ];
+				 	
+				 	console.log( "updating board with current shape " + this.currShape + " with rotation " + this.currShapeRotation );
+
+					// Draw the new position of the shape accounting for the rotation
+ 				 	for ( var shapeRow = 0; shapeRow < shapeMatrix.length; shapeRow++ ) {
+			 			
+				 		for ( var shapeCols = 0; shapeCols < shapeMatrix[ 0 ].length; shapeCols++ ) {
+				 			
+				 			if( shapeMatrix[ shapeRow ][ shapeCols ] == 1 ){
+				 				
+				 				// Check if the game is over
+				 				if( this.shapeY + shapeRow < 0 ){
+				 					
+				 					this._end();
+				 					
+				 				} else {
+				 					
+					 				this.board[ this.shapeY + shapeRow ][ this.shapeX + shapeCols ].filled = true;
+					 				this.board[ this.shapeY + shapeRow ][ this.shapeX + shapeCols ].color = this.colors[ this.currShape ];
+					 				this.board[ this.shapeY + shapeRow ][ this.shapeX + shapeCols ].updated = true;
+				 				
+				 				}
+				 				
+				 			}
+				 							 			
+					 	}
+					 	
+				 	} 
+					
+					// Render board display				
+					this._renderCurrentBoardConfiguration();
+					
+				},
+				
+				_renderCurrentBoardConfiguration: function(){
+					
+					var canvas = this.$mainCanvas[0],
+						canvasContext = canvas.getContext( '2d' ),
+						width = canvas.width,
+						height = canvas.height,
+						xValueIncrease = 50,
+						yValueIncrease = 50;
+					
+				 	for ( var boardRows = 0; boardRows < this.rows; boardRows++ ) {
+			 			
+				 		for ( var boardCols = 0; boardCols < this.columns; boardCols++ ) {
+				 							 			
+				 			if( this.board[ boardRows ][ boardCols ].updated ){
+				 				
+				 				if( this.board[ boardRows ][ boardCols ].filled ){
+				 					
+				 					this._render( canvas, canvasContext, boardRows, boardCols, this.board[ boardRows ][ boardCols ].color );
+				 					
+				 				} else {
+				 					
+				 					this._unrender( canvas, canvasContext, boardRows, boardCols );
+				 					
+				 				}
+				 				
+				 				this.board[ boardRows ][ boardCols ].updated = false;
+				 				 
+				 			}
+				 									 	
+					 	}
+					 	
+				 	}
+				 	
+				},
+
+				_unrender: function( canvas, canvasContext, mapRow, mapColumn ){
+					
+					var width = canvas.width,
+						height = canvas.height,
+						xValueIncrease = Math.floor( width / this.columns ),
+						yValueIncrease = Math.floor( height / this.rows );
+
+					this.shapesObject.erase( canvasContext, mapColumn * xValueIncrease, mapRow * yValueIncrease, xValueIncrease, yValueIncrease );					
+					
+				},
+				
+				_render: function( canvas, canvasContext, mapRow, mapColumn, color ){
+					
+					var width = canvas.width,
+						height = canvas.height,
+						xValueIncrease = Math.floor( width / this.columns ),
+						yValueIncrease = Math.floor( height / this.rows );
+
+					this.shapesObject.draw( canvasContext, color, mapColumn * xValueIncrease, mapRow * yValueIncrease, xValueIncrease, yValueIncrease );
+
+				},
+
+				_decreaseShapeXPosition: function(){
+					return this.shapeX--;
+				},
+				_decreaseShapeYPosition: function(){
+					return this.shapeY--;
+				},
+
+				_increaseShapeYPosition: function(){
+					return this.shapeY++;
+				},
+
+				_increaseShapeXPosition: function(){
+					return this.shapeX++;
+				},
+				
+				_displayPreviewShape: function(){
+					
+					console.log( "Displaying the next shape:" + this.shapesObject.shapeTypes[ this.nextShape ] + " with rotation " + this.nextShapeRotation );
+
+					var canvas = this.$nextShapePreviewCanvas[0],
+						canvasContext = canvas.getContext( '2d' ),
+						shapeMatrix = this.shapes[ this.nextShape ][ this.nextShapeRotation ];
+  					
+					this._centralizeShapeView( canvasContext, shapeMatrix.length );
+					
+					this._renderPreview( canvas, canvasContext, shapeMatrix );
+					  				  					  					
+				},
+				
+				_renderPreview: function( canvas, canvasContext, shapeMatrix ){
+					
+					var width = canvas.width,
+						height = canvas.height,
+						shapeLength = shapeMatrix.length,
+						shapeColor = this.shapesObject.colors[ this.nextShape ],
+						xValueIncrease = 50,
+						yValueIncrease = 25;
+					
+					canvasContext.clearRect( 0, 0, width, height );
+					
+  					for( var i = 0; i < shapeLength; i++ ) {					 					
+ 						
+ 						for( var j = 0; j < shapeMatrix[ i ].length; j++ ) {
+ 							
+ 							// Go ahead a draw a rectangle to represent this matrix value
+ 							if( shapeMatrix[ i ][ j ] == 1 ){
+								
+								var x = xValueIncrease * ( j + 1 ),
+									y = yValueIncrease * ( i + 1 );
+								
+								this.shapesObject.draw( canvasContext, shapeColor, x, y, xValueIncrease, yValueIncrease ); 									 							
+ 								
+ 							}
+
+ 						}
+ 						
+					}  
+  					
+				},
+				
+				_centralizeShapeView: function( canvasContext, shapeLength ){
+					
+					// Revert centering translation if it was done
+					if( this.lastTranslation == null ){
+						
+						canvasContext.translate( 0, 0 );  							
+						this.lastTranslation = [0,0];
+						
+					} else {
+						
+						canvasContext.translate( this.lastTranslation[0] * -1, this.lastTranslation[1] * -1 );
+						this.lastTranslation = [0,0];
+						
+					}
+  					
+					// Align shapes of length 2 and 4 to center
+  					if( shapeLength == 2 ){
+  						 
+  						canvasContext.translate( 50, 25 );
+  						this.lastTranslation = [50,25];
+  						
+  					} else if( shapeLength == 4 ){
+
+  						canvasContext.translate( -25, 0 );
+  						this.lastTranslation = [-25,0];
+  						
+  					}					
+					
+				},						
+
+				_end: function(){
+					
+					clearTimeout( this.fallTimeout );
+					
+					this.isPlaying = false;
+					this._toggleGameButtons();
+					this.$overlay.removeClass( 'hide' );					
+					this.$overlayText.html( "GAME OVER <br> <small>Press Enter To Start Game!<small>" );
+					
+					// New high score achieved
+					if( this.score > this.highscore ){
+						
+						this.$overlayText.append( "<br> NEW HIGH SCORE!!!!" );
+						
+						localStorage.setItem( 'tetris_highscore', this.score );						
+						
+					}
+					
+				},
+				
+				// TETRIS ACTIONS
+				_moveLeft: function(){
+					
+					console.log( "move left" );
+					
+					if ( this._testPosition( this.currShape, this.currShapeRotation, this.shapeX - 1, this.shapeY ) ) {
+						
+						this._decreaseShapeXPosition();
+						this._updateBoard();
+						
+					}
+	
+				},
+
+				_moveRight: function(){
+					
+					console.log( "move right" );
+					
+					if ( this._testPosition( this.currShape, this.currShapeRotation, this.shapeX + 1, this.shapeY ) ) {
+						
+						this._increaseShapeXPosition();
+						this._updateBoard();
+						
+					}
+	
+				},
+
+				_moveDown: function(){
+					
+					console.log( "move down" );
+					
+					if ( this._testPosition( this.currShape, this.currShapeRotation, this.shapeX, this.shapeY + 1 ) ) {
+						
+						this._increaseShapeYPosition();
+						this._updateBoard();
+						
+					}
+	
+				},
+
+				_drop: function(){
+					
+					console.log( "drop" );
+					
+					var dropDistance = 0,
+						self = this;
+					
+					// Drop the shape until it hits something
+					while( this._testPosition( this.currShape, this.currShapeRotation, this.shapeX, this.shapeY + dropDistance ) ){
+						dropDistance++;
+					}
+					
+					this.shapeY += dropDistance - 1;					
+					
+					this._updateBoard();
+					
+					this._lockShapeInPosition();								
+					
+				},
+				
+				_determinePushOutLength: function( nextRotation ){
+					
+					var moveValue = [0,0],
+						foundValid = false;
+					
+					// Move from left wall
+					if( !foundValid && this._testPosition( this.currShape, nextRotation, this.shapeX - 1, this.shapeY ) ){
+						moveValue = [-1,0];
+						foundValid = true;
+					}
+					
+					// Move from right wall
+					if( !foundValid && this._testPosition( this.currShape, nextRotation, this.shapeX + 1, this.shapeY ) ){
+						moveValue = [1,0];
+						foundValid = true;
+					} 
+
+					// Move from top
+					if( !foundValid && this._testPosition( this.currShape, nextRotation, this.shapeX, this.shapeY - 1 ) ){
+						moveValue = [0,-1];
+						foundValid = true;
+					}
+					
+					// If its still invalid then it must be a piece like a long piece rotating horizontally. So it needs 2 moves
+					if( !foundValid && this._testPosition( this.currShape, nextRotation, this.shapeX - 2, this.shapeY ) ){
+						moveValue = [-2,0];
+						foundValid = true;
+					}
+
+					if( !foundValid && this._testPosition( this.currShape, nextRotation, this.shapeX + 2, this.shapeY ) ){
+						moveValue = [2,0];
+						foundValid = true;
+					}
+										
+					if( !foundValid ){
+						throw new error( "Cant rotate block for some reason even after pushing it out!" );
+					}
+					
+					return moveValue
+					
+				},
+				
+				_rotate: function(){
+					
+					console.log( "rotate" );
+					
+					// Get the next rotation position array
+					var nextRotation = this.currShapeRotation++ < this.shapes[ this.currShape ].length - 1 ? this.currShapeRotation : 0,
+						canRotate = this._testPosition( this.currShape, nextRotation, this.shapeX, this.shapeY );
+					
+					// Shape must be against a wall need to place it outward so it freely rotate					
+					if( !canRotate ){						
+						
+						var moveOutValues = this._determinePushOutLength( nextRotation );
+						
+						this.shapeX += moveOutValues[0];
+						this.shapeY += moveOutValues[1];
+						
+					}
+					
+					this.currShapeRotation = nextRotation;
+					this._updateBoard();
+					
+				}
+				
+				
+			};
+		
+			// Plugin wrapper around the constructor
+			$.fn[ pluginName ] = function( option ) {
+				
+				var args = arguments, result;
+		
+				this.each( function() {
+					
+					var $this = $(this), 
+						data = $.data( this, 'plugin_' + pluginName ),
+						options = typeof option === 'object' && option;
+				
+					if (!data) {
+						
+						$this.data('plugin_' + pluginName, ( data = new Tetris( this, options ) ) );
+						
+					}
+					
+					if (typeof option === 'string') {
+						
+						result = data[ option ].apply( data, Array.prototype.slice.call( args, 1 ) );
+						
+					}
+					
+				});
+		
+				// To enable plugin returns values
+			    return result || this;
+			};
+	
+		})( jQuery, window, document );		
+	
+	</script>
+		
+	<script>
+	
+		$( function(){
+			
+			// Init Tetris Game			
+			var tetrisOptions = {};
+			
+			$( '#tetris' ).tetris( tetrisOptions );
+			
+		});
+	
+	</script>
+	
+</body>
+
+</html>
